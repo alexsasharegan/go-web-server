@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en-us">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport"
+	      content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+	<meta http-equiv="X-UA-Compatible" content="ie=edge">
+	<title>Go</title>
+	
+	<link rel="stylesheet"
+	      href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css"
+	      integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ"
+	      crossorigin="anonymous">
+	<link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"
+	      rel="stylesheet"
+	      integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN"
+	      crossorigin="anonymous">
+	
+	<style>
+		.padded {
+			padding: 1em;
+		}
+		
+		.md-drop-shadow-lt {
+			box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+		}
+		
+		@media all and (min-width: 1000px) {
+			.constrained {
+				max-width: 80vw;
+				margin: 0 auto;
+			}
+		}
+	</style>
+</head>
+<body>
+
+<main class="">
+	<nav class="navbar navbar-light bg-faded justify-content-between md-drop-shadow-lt mb-2">
+		<div class="container d-flex flex-row">
+			<a href="#" class="navbar-brand">Learning Go: Building a WebServer</a>
+			<form id="search-form" class="form-inline ml-auto">
+				<input id="search-input" class="form-control mr-sm-2" type="text" name="search"
+				       placeholder="Search the library">
+				<button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
+			</form>
+		</div>
+	</nav>
+	
+	<section class="padded container-fluid">
+		<div class="constrained">
+			<table width="100%" class="table table-hover">
+				<thead>
+				<tr>
+					<th width="40%">Title</th>
+					<th width="30%">Author</th>
+					<th width="10%">Year</th>
+					<th width="20%">ID</th>
+				</tr>
+				</thead>
+				<tbody id="search-results"></tbody>
+			</table>
+		</div>
+	</section>
+</main>
+
+<script src="https://code.jquery.com/jquery-3.2.1.min.js"
+        integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+        crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js"
+        integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb"
+        crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js"
+        integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn"
+        crossorigin="anonymous"></script>
+<script>
+	(function ( global ) {
+		'use strict';
+		
+		const $searchForm = $( '#search-form' );
+		const $tableBody = $( '#search-results' );
+		
+		function submitSearch( e ) {
+			if ( e && typeof e.preventDefault === 'function' ) e.preventDefault();
+			
+			$.ajax( {
+				url: '/search',
+				method: 'POST',
+				data: $searchForm.serialize(),
+				success: onSubmitSuccess
+			} );
+		}
+		
+		function compose( fn, ...fns ) {
+			return ( ...args ) => fns.reduce( ( carry, fn ) => fn.call( this, carry ), fn.apply( this, args ) )
+		}
+		
+		function onSubmitSuccess( data ) {
+			const parsedData = JSON.parse( data );
+			if ( !parsedData ) return;
+			
+			$tableBody.html(
+				parsedData.map( fillTableRow ).join( '' )
+			);
+			
+			$tableBody.find( 'tr' ).click( onClickTableRow );
+		}
+		
+		function onClickTableRow( e ) {
+			$.get( `/books/add?id=${$( this ).data( 'id' )}` );
+		};
+		
+		function fillTableRow( { Title, Author, Year, ID } ) {
+			return `<tr data-id="${ID}"><td>${Title}</td><td>${Author}</td><td>${Year}</td><td>${ID}</td></tr>`;
+		}
+		
+		$searchForm.submit( submitSearch )
+	}( window ));
+</script>
+</body>
+</html>
